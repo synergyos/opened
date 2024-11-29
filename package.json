@@ -1,6 +1,6 @@
 {
   "name": "@ronomon/opened",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Check if a file is open in another application on Windows, macOS and Linux.",
   "main": "index.js",
   "files": [
@@ -34,6 +34,6 @@
   },
   "dependencies": {
     "@ronomon/queue": "^3.0.0",
-    "nan": "^2.11.0"
+    "nan": "^2.22.0"
   }
 }
