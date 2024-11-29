@@ -1,6 +1,6 @@
 {
   "name": "@ronomon/opened",
-  "version": "1.5.3",
+  "version": "2.0.0",
   "description": "Check if a file is open in another application on Windows, macOS and Linux.",
   "main": "index.js",
   "files": [
@@ -30,8 +30,7 @@
   "homepage": "https://github.com/ronomon/opened#readme",
   "scripts": {
   "postinstall": "node-gyp clean",
-  "rebuild": "node-gyp rebuild",
-  "rebuild:electron": "node-gyp rebuild --target=$(npm explore electron -- echo $(node -p \"require('./package.json').version\")) --dist-url=https://electronjs.org/headers"
+    "test": "node test.js"
 },
   "dependencies": {
     "@ronomon/queue": "^3.0.0",
