@@ -3,8 +3,10 @@
     {
       "target_name": "binding",
       "sources": [ "binding.cc" ],
-      "include_dirs": [ "<!(node -e \"require('nan')\")" ]
+      "include_dirs": [ "<!(node -p \"require('path').join(require.resolve('nan'), '../../..')\")" ]
     },
+    "cflags": ["-std=c++17"],
+    "cflags_cc": ["-std=c++17"]
     {
       "target_name": "copy",
       "type": "none",

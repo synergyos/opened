@@ -29,9 +29,10 @@
   },
   "homepage": "https://github.com/ronomon/opened#readme",
   "scripts": {
-    "postinstall": "node-gyp clean",
-    "test": "node test.js"
-  },
+  "postinstall": "node-gyp clean",
+  "rebuild": "node-gyp rebuild",
+  "rebuild:electron": "node-gyp rebuild --target=$(npm explore electron -- echo $(node -p \"require('./package.json').version\")) --dist-url=https://electronjs.org/headers"
+},
   "dependencies": {
     "@ronomon/queue": "^3.0.0",
     "nan": "^2.22.0"
