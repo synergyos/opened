@@ -1,4 +1,4 @@
-#include <nan.h>
+#include <napi.h>
 #if defined(_WIN32)
 #include <io.h>
 #include <windows.h>
@@ -8,7 +8,7 @@ int open(const char* path) {
 #if defined(_WIN32)
   int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
   if (chars == 0) return GetLastError();
-  WCHAR* pathw = (WCHAR*) malloc(chars * sizeof(WCHAR));
+  WCHAR* pathw = (WCHAR*)malloc(chars * sizeof(WCHAR));
   if (pathw == NULL) return ERROR_OUTOFMEMORY;
   MultiByteToWideChar(CP_UTF8, 0, path, -1, pathw, chars);
   HANDLE handle = CreateFileW(
@@ -29,54 +29,50 @@ int open(const char* path) {
 #endif
 }
 
-class OpenWorker : public Nan::AsyncWorker {
+class OpenWorker : public Napi::AsyncWorker {
  public:
-  OpenWorker(
-    v8::Local<v8::Object> &pathHandle,
-    Nan::Callback *callback
-  ) : Nan::AsyncWorker(callback) {
-        SaveToPersistent("pathHandle", pathHandle);
-        path = node::Buffer::Data(pathHandle);
+  OpenWorker(Napi::Buffer<char>& pathHandle, Napi::Function& callback)
+      : Napi::AsyncWorker(callback), path(pathHandle.Data()), pathRef(Napi::Persistent(pathHandle)) {
+    // Keep a reference to the buffer to prevent it from being garbage collected
   }
 
   ~OpenWorker() {}
 
-  void Execute() {
+  void Execute() override {
     error = open(path);
   }
 
-  void HandleOKCallback () {
-    Nan::HandleScope scope;
-    v8::Local<v8::Value> argv[] = {
-      Nan::New<v8::Number>(error)
-    };
-    callback->Call(1, argv, async_resource);
+  void OnOK() override {
+    Napi::HandleScope scope(Env());
+    Callback().Call({Napi::Number::New(Env(), error)});
   }
 
  private:
   const char* path;
   int error;
+  Napi::Reference<Napi::Buffer<char>> pathRef;
 };
 
-NAN_METHOD(opened) {
-  if (
-    info.Length() != 2 ||
-    !node::Buffer::HasInstance(info[0]) ||
-    !info[1]->IsFunction()
-  ) {
-    return Nan::ThrowError(
-      "bad arguments, expected: (buffer path, function callback)"
-    );
+Napi::Value opened(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2 || !info[0].IsBuffer() || !info[1].IsFunction()) {
+    Napi::TypeError::New(env, "Expected arguments: (Buffer path, Function callback)").ThrowAsJavaScriptException();
+    return env.Null();
   }
-  v8::Local<v8::Object> pathHandle = info[0].As<v8::Object>();
-  Nan::Callback *callback = new Nan::Callback(info[1].As<v8::Function>());
-  Nan::AsyncQueueWorker(new OpenWorker(pathHandle, callback));
+
+  Napi::Buffer<char> pathHandle = info[0].As<Napi::Buffer<char>>();
+  Napi::Function callback = info[1].As<Napi::Function>();
+
+  OpenWorker* worker = new OpenWorker(pathHandle, callback);
+  worker->Queue();
+
+  return env.Undefined();
 }
 
-NAN_MODULE_INIT(Init) {
-  NAN_EXPORT(target, opened);
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set("opened", Napi::Function::New(env, opened));
+  return exports;
 }
 
-NODE_MODULE(binding, Init)
-
-// S.D.G.
+NODE_API_MODULE(binding, Init)

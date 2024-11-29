@@ -22,7 +22,7 @@
     "open",
     "opened"
   ],
-  "author": "Joran Dirk Greef",
+  "author": "",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ronomon/opened/issues"
@@ -34,6 +34,6 @@
 },
   "dependencies": {
     "@ronomon/queue": "^3.0.0",
-    "nan": "^2.22.0"
+    "node-addon-api": "^7.0.0"
   }
 }
